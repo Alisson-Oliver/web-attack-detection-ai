@@ -1,12 +1,9 @@
 import type { Status } from "@/lib/waf-simulator";
 
 const styles: Record<Status, string> = {
-  ALLOW:
-    "border-[color:var(--allow)] text-[color:var(--allow)] bg-[color:var(--allow)]/10 glow-allow",
-  CAPTCHA:
-    "border-[color:var(--captcha)] text-[color:var(--captcha)] bg-[color:var(--captcha)]/10 glow-captcha",
-  BLOCK:
-    "border-[color:var(--block)] text-[color:var(--block)] bg-[color:var(--block)]/10 glow-block",
+  ALLOW: "border-[color:var(--allow)] text-[color:var(--allow)] bg-[color:var(--allow)]/10",
+  CAPTCHA: "border-[color:var(--captcha)] text-[color:var(--captcha)] bg-[color:var(--captcha)]/10",
+  BLOCK: "border-[color:var(--block)] text-[color:var(--block)] bg-[color:var(--block)]/10",
 };
 
 export function StatusBadge({ status }: { status: Status }) {

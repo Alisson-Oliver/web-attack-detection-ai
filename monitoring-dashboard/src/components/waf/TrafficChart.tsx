@@ -15,7 +15,7 @@ export function TrafficChart({ counts }: Props) {
 
   return (
     <div className="flex items-center gap-6">
-      <div className="relative h-[200px] w-[200px] shrink-0">
+      <div className="relative h-50 w-50 shrink-0">
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie

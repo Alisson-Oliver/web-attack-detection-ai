@@ -1,10 +1,8 @@
 import type { ScriptType } from "@/lib/waf-simulator";
 
 const styles: Record<ScriptType, string> = {
-  Normal:
-    "border-[color:var(--allow)] text-[color:var(--allow)] bg-[color:var(--allow)]/10 glow-allow",
-  Ataque:
-    "border-[color:var(--block)] text-[color:var(--block)] bg-[color:var(--block)]/10 glow-block",
+  Normal: "border-[color:var(--allow)] text-[color:var(--allow)] bg-[color:var(--allow)]/10",
+  Ataque: "border-[color:var(--block)] text-[color:var(--block)] bg-[color:var(--block)]/10",
 };
 
 export function ScriptTypeBadge({ type }: { type: ScriptType }) {

@@ -12,8 +12,7 @@ export function Dashboard() {
   const [streaming, setStreaming] = useState(false);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const addLog = (entry: LogEntry) =>
-    setLogs((prev) => [entry, ...prev].slice(0, MAX_LOGS));
+  const addLog = (entry: LogEntry) => setLogs((prev) => [entry, ...prev].slice(0, MAX_LOGS));
 
   useEffect(() => {
     if (streaming) {
@@ -56,11 +55,9 @@ export function Dashboard() {
         </div>
         <div className="flex items-center gap-2 rounded-md border border-border bg-card/60 px-3 py-1.5 font-mono text-xs">
           <span
-            className={`h-2 w-2 rounded-full ${streaming ? "bg-[color:var(--allow)] glow-allow animate-pulse-dot" : "bg-muted-foreground"}`}
+            className={`h-2 w-2 rounded-full ${streaming ? "bg-allow glow-allow animate-pulse-dot" : "bg-muted-foreground"}`}
           />
-          <span className="text-muted-foreground">
-            {streaming ? "STREAMING" : "IDLE"}
-          </span>
+          <span className="text-muted-foreground">{streaming ? "STREAMING" : "IDLE"}</span>
         </div>
       </header>
 
@@ -70,7 +67,7 @@ export function Dashboard() {
           <div className="mb-4 flex items-center gap-2">
             <Zap className="h-4 w-4 text-primary" />
             <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">
-              Traffic Simulation
+              Simular Tráfego
             </h2>
           </div>
           <p className="mb-5 text-xs leading-relaxed text-muted-foreground">
@@ -95,8 +92,8 @@ export function Dashboard() {
               onClick={() => setStreaming((s) => !s)}
               className={`group flex w-full items-center justify-between rounded-lg border px-4 py-3 text-sm font-semibold transition ${
                 streaming
-                  ? "border-[color:var(--block)] bg-[color:var(--block)]/15 text-[color:var(--block)] glow-block"
-                  : "border-[color:var(--allow)] bg-[color:var(--allow)]/10 text-[color:var(--allow)] hover:glow-allow"
+                  ? "border-block bg-(--block)/15 text-block glow-block"
+                  : "border-allow bg-(--allow)/10 text-allow hover:glow-allow"
               }`}
             >
               <span className="flex items-center gap-2">
@@ -137,7 +134,7 @@ export function Dashboard() {
           <div className="flex items-center justify-between border-b border-border px-5 py-3">
             <div className="flex items-center gap-2">
               <span
-                className={`h-2 w-2 rounded-full ${streaming ? "bg-[color:var(--allow)] animate-pulse-dot" : "bg-muted-foreground"}`}
+                className={`h-2 w-2 rounded-full ${streaming ? "bg-allow animate-pulse-dot" : "bg-muted-foreground"}`}
               />
               <h2 className="text-xs font-bold uppercase tracking-widest text-foreground">
                 Live API Logs
@@ -151,7 +148,7 @@ export function Dashboard() {
             </button>
           </div>
 
-          <div className="max-h-[480px] overflow-auto">
+          <div className="max-h-120 overflow-auto">
             <table className="w-full text-sm">
               <thead className="sticky top-0 bg-card/95 backdrop-blur">
                 <tr className="text-left text-[10px] uppercase tracking-widest text-muted-foreground">
@@ -166,7 +163,10 @@ export function Dashboard() {
               <tbody>
                 {logs.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="px-5 py-16 text-center text-xs text-muted-foreground">
+                    <td
+                      colSpan={6}
+                      className="px-5 py-16 text-center text-xs text-muted-foreground"
+                    >
                       <div className="flex flex-col items-center gap-2 font-mono">
                         <span className="opacity-50">// no traffic captured</span>
                         <span className="opacity-30">awaiting simulation...</span>
@@ -210,7 +210,12 @@ export function Dashboard() {
 function Stat({ label, value, color }: { label: string; value: number; color: string }) {
   return (
     <div className="rounded-md border border-border bg-background/40 px-3 py-2">
-      <div className="font-mono text-lg font-bold" style={{ color: `var(--${label.toLowerCase() === "allow" ? "allow" : label.toLowerCase() === "captcha" ? "captcha" : "block"})` }}>
+      <div
+        className="font-mono text-lg font-bold"
+        style={{
+          color: `var(--${label.toLowerCase() === "allow" ? "allow" : label.toLowerCase() === "captcha" ? "captcha" : "block"})`,
+        }}
+      >
         {value}
       </div>
       <div className="text-[10px] uppercase tracking-widest text-muted-foreground">{label}</div>
@@ -221,8 +226,7 @@ function Stat({ label, value, color }: { label: string; value: number; color: st
 
 function EntropyBar({ value }: { value: number }) {
   const pct = Math.min(100, (value / 7) * 100);
-  const color =
-    value >= 4 ? "var(--block)" : value >= 2.5 ? "var(--captcha)" : "var(--allow)";
+  const color = value >= 4 ? "var(--block)" : value >= 2.5 ? "var(--captcha)" : "var(--allow)";
   return (
     <div className="flex items-center gap-2">
       <div className="h-1 w-16 overflow-hidden rounded-full bg-secondary">
