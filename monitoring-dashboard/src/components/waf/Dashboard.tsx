@@ -30,24 +30,30 @@ export function Dashboard() {
   const runLoop = useCallback(async function loop() {
     if (!streamingRef.current) return;
     const profile = PROFILES[selectedProfileRef.current];
+
+    const isAttack = profile.scriptType === "Ataque";
+    const parallelCount = isAttack ? 5 : 1;
+
     try {
-      const log = await fetchLogFromProfile(profile);
-      setLogs((prev) => [log, ...prev].slice(0, MAX_LOGS));
-      const statusTag = log.httpStatus === 0 ? "offline" : `HTTP ${log.httpStatus}`;
-      setConsoleLines((prev) => [
-        ...prev.slice(-(MAX_CONSOLE - 1)),
-        `${log.method.padEnd(4)} ${log.path} · ${log.ip} → ${log.status} [${statusTag}]`,
-      ]);
+      const logs = await Promise.all(
+        Array.from({ length: parallelCount }, () => fetchLogFromProfile(profile)),
+      );
+      setLogs((prev) => [...logs, ...prev].slice(0, MAX_LOGS));
+      logs.forEach((log) => {
+        const statusTag = log.httpStatus === 0 ? "offline" : `HTTP ${log.httpStatus}`;
+        setConsoleLines((prev) => [
+          ...prev.slice(-(MAX_CONSOLE - 1)),
+          `${log.method.padEnd(4)} ${log.path} · ${log.ip} → ${log.status} [${statusTag}]`,
+        ]);
+      });
     } catch {
       setConsoleLines((prev) => [
         ...prev.slice(-(MAX_CONSOLE - 1)),
         `! connection error — backend offline?`,
       ]);
     }
-    const delay = Math.max(
-      200,
-      profile.minDelayMs + Math.random() * (profile.maxDelayMs - profile.minDelayMs),
-    );
+
+    const delay = profile.minDelayMs + Math.random() * (profile.maxDelayMs - profile.minDelayMs);
     timerRef.current = setTimeout(loop, delay);
   }, []);
 
