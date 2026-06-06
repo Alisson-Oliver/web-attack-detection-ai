@@ -95,6 +95,7 @@ export async function fetchLogFromProfile(profile: TrafficProfile): Promise<LogE
   if (body) headers["Content-Type"] = "application/json";
 
   let httpStatus = 200;
+  let wafDecision: string | null = null;
   try {
     const res = await fetch(`${BACKEND_URL}${path}`, {
       method,
@@ -103,12 +104,16 @@ export async function fetchLogFromProfile(profile: TrafficProfile): Promise<LogE
       signal: AbortSignal.timeout(5000),
     });
     httpStatus = res.status;
+    wafDecision = res.headers.get("X-WAF-Decision");
   } catch {
     httpStatus = 0;
   }
 
   let status: Status;
-  if (httpStatus === 403) status = "BLOCK";
+  if (wafDecision === "BLOCK") status = "BLOCK";
+  else if (wafDecision === "CAPTCHA") status = "CAPTCHA";
+  else if (wafDecision === "ALLOW") status = "ALLOW";
+  else if (httpStatus === 403) status = "BLOCK";
   else if (httpStatus === 401) status = "CAPTCHA";
   else if (httpStatus === 0) status = "BLOCK";
   else status = "ALLOW";

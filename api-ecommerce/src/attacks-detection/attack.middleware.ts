@@ -75,13 +75,16 @@ export class AttackMiddleware implements NestMiddleware {
       if (decision === 'block' || decision === 'bloquear') {
         this.stats.aiBlocked++;
         this.writeAuditLog(clientIp, pathUrl, 'AI_BLOCK', features.reqPerMinute, score);
+        res.set('X-WAF-Decision', 'BLOCK');
         return res.status(403).json({ message: 'Acesso Bloqueado por Política de Segurança.' });
       } else if (decision === 'captcha') {
         this.stats.aiCaptcha++;
         this.writeAuditLog(clientIp, pathUrl, 'AI_CAPTCHA', features.reqPerMinute, score);
+        res.set('X-WAF-Decision', 'CAPTCHA');
         return res.status(401).json({ message: 'Verificação Necessária (CAPTCHA).' });
       } else {
         this.stats.allowed++;
+        res.set('X-WAF-Decision', 'ALLOW');
       }
 
     } catch (httpError) {
