@@ -8,7 +8,7 @@ from .schemas import InputData
 ml_artifacts = {}
 
 BASE_DIR = Path(__file__).resolve().parent
-MODEL_PATH = BASE_DIR.parent / "models" / "model.pkl" 
+MODEL_PATH = BASE_DIR.parent / "models" / "botnet_detector_model.pkl" 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -18,7 +18,6 @@ async def lifespan(app: FastAPI):
         ml_artifacts["model"] = modelo_rf
         ml_artifacts["feature_columns"] = list(InputData.model_fields.keys())
         print("Modelo carregado com sucesso!")
-        print(f"Features esperadas ({len(ml_artifacts['feature_columns'])}):", ml_artifacts["feature_columns"])
     except Exception as e:
         print(f"Erro ao carregar o modelo: {e}")
     yield
@@ -39,11 +38,11 @@ async def predict(data: InputData):
         score_ataque = float(model.predict_proba(prediction_array)[0][1])
         
         if score_ataque <= 0.60:
-            acao = "ok"          
+            acao = "ok"
         elif score_ataque <= 0.80:
-            acao = "captcha"     
+            acao = "captcha"
         else:
-            acao = "block"      
+            acao = "block" 
 
         return { 
             "status": "success",
@@ -55,4 +54,4 @@ async def predict(data: InputData):
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run("main:app", host="0.0.0.0", port=8000, workers=4)
