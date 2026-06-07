@@ -35,18 +35,18 @@ async def predict(data: InputData):
         ordered_features = [input_dict[col] for col in ml_artifacts["feature_columns"]]
         model = ml_artifacts["model"]
         prediction_array = np.array(ordered_features).reshape(1, -1)
-        score_ataque = float(model.predict_proba(prediction_array)[0][1])
+        score = float(model.predict_proba(prediction_array)[0][1])
         
-        if score_ataque <= 0.60:
+        if score <= 0.60:
             acao = "ok"
-        elif score_ataque <= 0.80:
+        elif score <= 0.80:
             acao = "captcha"
         else:
             acao = "block" 
 
         return { 
             "status": "success",
-            "score": round(score_ataque, 4),
+            "score": round(score, 4),
             "action": acao
         }
     except Exception as e:
