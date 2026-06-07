@@ -1,0 +1,434 @@
+/* ── Layout ─────────────────────────────────────────────────────────── */
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg);
+}
+
+.layout {
+  display: flex;
+  flex: 1;
+  overflow: hidden;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────── */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 20px;
+  height: 48px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-title {
+  font-family: var(--font-ui);
+  font-weight: 800;
+  font-size: 16px;
+  letter-spacing: -0.5px;
+  color: var(--text);
+}
+
+.header-sub {
+  font-size: 11px;
+  color: var(--text3);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-left: 1px solid var(--border2);
+  padding-left: 10px;
+  margin-left: 2px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+/* ── Status dot ─────────────────────────────────────────────────────── */
+.status-dot-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+}
+
+.status-dot.running {
+  background: var(--allow);
+  box-shadow: 0 0 8px var(--allow);
+  animation: pulse 1.2s ease-in-out infinite;
+}
+
+.status-dot.idle { background: var(--text3); }
+.status-dot.offline { background: var(--block); }
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50%       { opacity: 0.4; }
+}
+
+.status-label {
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text2);
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+.sidebar {
+  width: 240px;
+  flex-shrink: 0;
+  background: var(--bg1);
+  border-right: 1px solid var(--border);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.sidebar-section {
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-label {
+  font-size: 10px;
+  letter-spacing: 0.12em;
+  color: var(--text3);
+  margin-bottom: 10px;
+}
+
+/* Mode buttons */
+.mode-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.mode-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 9px 10px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--text);
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+  text-align: left;
+}
+
+.mode-btn:hover:not(:disabled) {
+  background: var(--bg2);
+  border-color: var(--accent, var(--border2));
+}
+
+.mode-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mode-text {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.mode-label {
+  font-family: var(--font-ui);
+  font-weight: 600;
+  font-size: 12px;
+  color: var(--text);
+}
+
+.mode-sub {
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.mode-play {
+  color: var(--text3);
+  flex-shrink: 0;
+}
+
+/* Stop button */
+.btn-stop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  background: var(--block-dim);
+  border: 1px solid var(--block);
+  border-radius: 6px;
+  color: var(--block);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.15s;
+}
+
+.btn-stop:hover {
+  background: #e8404035;
+}
+
+/* Totals */
+.totals {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.total-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+}
+
+.total-label {
+  flex: 1;
+  color: var(--text2);
+}
+
+.total-val {
+  font-weight: 500;
+  color: var(--text);
+}
+
+/* ── Main ────────────────────────────────────────────────────────────── */
+.main {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+/* ── Stats grid ──────────────────────────────────────────────────────── */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  background: var(--border);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.stat-card {
+  background: var(--bg1);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stat-card-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+}
+
+.stat-profile {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.stat-total {
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.stat-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.stat-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.bar-track {
+  flex: 1;
+  height: 3px;
+  background: var(--bg3);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.bar-fill {
+  height: 100%;
+  border-radius: 2px;
+  transition: width 0.3s ease;
+  min-width: 0;
+}
+
+.bar-fill.allow   { background: var(--allow); }
+.bar-fill.captcha { background: var(--captcha); }
+.bar-fill.block   { background: var(--block); }
+
+.bar-val {
+  font-size: 11px;
+  width: 28px;
+  text-align: right;
+}
+
+.stat-footer {
+  border-top: 1px solid var(--border);
+  padding-top: 6px;
+}
+
+.stat-pct {
+  font-size: 11px;
+  font-weight: 500;
+}
+
+/* ── Log panel ───────────────────────────────────────────────────────── */
+.log-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+
+.log-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: var(--bg1);
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text2);
+  flex-shrink: 0;
+}
+
+.log-count {
+  margin-left: auto;
+  font-size: 10px;
+  color: var(--text3);
+}
+
+.log-cols-header {
+  display: grid;
+  grid-template-columns: 60px 100px 120px 44px 1fr 54px 90px;
+  gap: 0 8px;
+  padding: 6px 16px;
+  font-size: 10px;
+  letter-spacing: 0.1em;
+  color: var(--text3);
+  background: var(--bg1);
+  border-bottom: 1px solid var(--border);
+  flex-shrink: 0;
+}
+
+.log-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.log-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  height: 200px;
+  color: var(--text3);
+  font-size: 12px;
+}
+
+/* Log rows */
+.log-row {
+  display: grid;
+  grid-template-columns: 60px 100px 120px 44px 1fr 54px 90px;
+  gap: 0 8px;
+  padding: 5px 16px;
+  font-size: 11px;
+  border-bottom: 1px solid transparent;
+  transition: background 0.1s;
+  align-items: center;
+}
+
+.log-row:hover {
+  background: var(--bg2);
+}
+
+.log-row.dec-allow   { border-left: 2px solid var(--allow-dim); }
+.log-row.dec-captcha { border-left: 2px solid var(--captcha-dim); }
+.log-row.dec-block   { border-left: 2px solid var(--block-dim); }
+
+.log-ts       { color: var(--text3); font-size: 10px; }
+.log-ip       { color: var(--text2); }
+.log-endpoint { color: var(--text2); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.log-status   { color: var(--text3); text-align: center; }
+
+.log-method {
+  font-weight: 600;
+  font-size: 10px;
+}
+.method-GET  { color: #60a5fa; }
+.method-POST { color: var(--captcha); }
+
+.log-decision {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+}
+
+/* ── Responsive clamp ────────────────────────────────────────────────── */
+@media (max-width: 1100px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+
+/* ── Clear button ────────────────────────────────────────────────────── */
+.btn-clear {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 9px;
+  background: transparent;
+  border: 1px solid var(--border2);
+  border-radius: 6px;
+  color: var(--text2);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  cursor: pointer;
+  letter-spacing: 0.04em;
+  transition: background 0.15s, border-color 0.15s, color 0.15s;
+}
+
+.btn-clear:hover {
+  background: var(--bg2);
+  border-color: var(--text3);
+  color: var(--text);
+}
