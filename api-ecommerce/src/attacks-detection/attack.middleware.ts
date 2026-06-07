@@ -3,41 +3,45 @@ import { Request, Response, NextFunction } from 'express';
 import { HttpService } from '@nestjs/axios';
 import { firstValueFrom } from 'rxjs';
 import { AttackCacheService } from './attack-cache.service';
-import * as fs from 'fs';
-import * as path from 'path';
-
 @Injectable()
 export class AttackMiddleware implements NestMiddleware {
   private readonly logger = new Logger('SecurityAudit');
   private readonly FASTAPI_URL = 'http://localhost:8000/predict';
-
-  private readonly auditLogPath = path.join(process.cwd(), 'security_audit.log');
-
-  private stats = {
-    totalReqs: 0,
-    allowed: 0,
-    bouncerBlocked: 0,
-    aiBlocked: 0,
-    aiCaptcha: 0,
-    aiFailures: 0
+  
+  private profileStats = {
+    '1. Humano (200.150.*)': { ALLOW: 0, CAPTCHA: 0, BLOCK: 0 },
+    '2. Força Bruta (10.0.*)': { ALLOW: 0, CAPTCHA: 0, BLOCK: 0 },
+    '3. Scraper (192.168.*)': { ALLOW: 0, CAPTCHA: 0, BLOCK: 0 },
+    '4. DoS Single (66.66.*)': { ALLOW: 0, CAPTCHA: 0, BLOCK: 0 },
+    '5. Botnet (172.16.*)': { ALLOW: 0, CAPTCHA: 0, BLOCK: 0 },
+    'Outros': { ALLOW: 0, CAPTCHA: 0, BLOCK: 0 },
   };
 
   constructor(
     private readonly httpService: HttpService,
     private readonly botnetCacheService: AttackCacheService 
-  ) {}
+  ) {
+  }
+
+  private getProfileName(ip: string): string {
+    if (ip.startsWith('200.150.')) return '1. Humano (200.150.*)';
+    if (ip.startsWith('10.0.')) return '2. Força Bruta (10.0.*)';
+    if (ip.startsWith('192.168.')) return '3. Scraper (192.168.*)';
+    if (ip === '66.66.66.66') return '4. DoS Single (66.66.*)';
+    if (ip.startsWith('172.16.')) return '5. Botnet (172.16.*)';
+    return 'Outros';
+  }
 
   async use(req: Request, res: Response, next: NextFunction) {
     const pathUrl = req.originalUrl;
     const method = req.method;
     
-    const clientIp = (req.headers['x-forwarded-for'] as string) || req.ip || req.socket.remoteAddress || 'unknown';
-
-    if (pathUrl.startsWith('/docs') || pathUrl.startsWith('/favicon') || pathUrl.startsWith('/api-docs')) {
-      return next();
+    if (pathUrl === '/api/admin/live-stats') {
+      res.set('Access-Control-Allow-Origin', '*'); 
+      return res.status(200).json(this.profileStats);
     }
-
-    this.stats.totalReqs++;
+    
+    const clientIp = (req.headers['x-forwarded-for'] as string) || req.ip || req.socket.remoteAddress || 'unknown';
 
     const features = await this.botnetCacheService.processRequestAndGetFeatures(clientIp, pathUrl);
 
@@ -58,39 +62,36 @@ export class AttackMiddleware implements NestMiddleware {
       missing_standard_headers: hasStandardHeaders === 0 ? 1 : 0,
       is_post_request: method === 'POST' ? 1 : 0,
       is_datacenter_ip: 0,
-
       window_total_req: features.window_total_req,
       unique_ips_in_window: features.unique_ips_in_window
     };
 
     try {
-      const response$ = this.httpService.post(this.FASTAPI_URL, aiPayload, { timeout: 5000 });
-      const { data } = await firstValueFrom(response$);
+      const response = this.httpService.post(this.FASTAPI_URL, aiPayload, { timeout: 5000 });
+      const { data } = await firstValueFrom(response);
       
       const decision = data?.action || 'ok';
       const score = parseFloat(data?.score || 0);
 
       this.logger.log(`IP: ${clientIp} | Rota: ${pathUrl} | IA Decisão: ${decision.toUpperCase()} | Score: ${score.toFixed(2)}`);
 
+      const profile = this.getProfileName(clientIp);
+
       if (decision === 'block' || decision === 'bloquear') {
-        this.stats.aiBlocked++;
-        this.writeAuditLog(clientIp, pathUrl, 'AI_BLOCK', features.reqPerMinute, score);
+        this.profileStats[profile].BLOCK++;
         res.set('X-WAF-Decision', 'BLOCK');
         return res.status(403).json({ message: 'Acesso Bloqueado por Política de Segurança.' });
       } else if (decision === 'captcha') {
-        this.stats.aiCaptcha++;
-        this.writeAuditLog(clientIp, pathUrl, 'AI_CAPTCHA', features.reqPerMinute, score);
+        this.profileStats[profile].CAPTCHA++;
         res.set('X-WAF-Decision', 'CAPTCHA');
         return res.status(401).json({ message: 'Verificação Necessária (CAPTCHA).' });
       } else {
-        this.stats.allowed++;
+        this.profileStats[profile].ALLOW++;
         res.set('X-WAF-Decision', 'ALLOW');
       }
 
     } catch (httpError) {
-      this.stats.aiFailures++;
-      this.stats.allowed++; 
-      // this.logger.warn(`IA indisponível. Fail-Open aplicado. IP: ${clientIp}`);
+      this.profileStats['Outros'].ALLOW++;
     }
 
     res.on('finish', () => {
@@ -100,18 +101,5 @@ export class AttackMiddleware implements NestMiddleware {
     });
 
     next();
-  }
-
-  private writeAuditLog(ip: string, route: string, action: string, rate: number, score: number) {
-    const auditLog = {
-      timestamp: new Date().toISOString(),
-      level: 'SECURITY_AUDIT',
-      ip, route, action,
-      metrics: { reqPerMinute: rate, aiThreatScore: score }
-    };
-    
-    fs.appendFile(this.auditLogPath, JSON.stringify(auditLog) + '\n', (err) => {
-      if (err) this.logger.error(`Falha ao escrever no audit log: ${err.message}`);
-    });
   }
 }

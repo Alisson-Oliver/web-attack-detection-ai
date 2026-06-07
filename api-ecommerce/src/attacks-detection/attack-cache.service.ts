@@ -1,71 +1,84 @@
 import { Injectable } from '@nestjs/common';
 
 interface IpData {
-  reqCount: number;
-  lastReqTime: number;
+  reqTimestamps: number[];   
   intervals: number[];
   endpoints: Set<string>;
   errorCount: number;
+  lastReqTime: number;
 }
 
 @Injectable()
 export class AttackCacheService {
   private ipCache = new Map<string, IpData>();
-  
-  private activeIps = new Set<string>();
-  private globalReqCount = 0;
-  private lastReset = Date.now();
+
+  private globalTimestamps: number[] = [];
 
   async processRequestAndGetFeatures(ip: string, path: string) {
     const now = Date.now();
+    const windowStart = now - 60_000; 
 
-    if (now - this.lastReset > 60000) {
-      this.ipCache.clear();
-      this.activeIps.clear();
-      this.globalReqCount = 0;
-      this.lastReset = now;
+    this.globalTimestamps.push(now);
+    while (this.globalTimestamps.length > 0 && this.globalTimestamps[0] < windowStart) {
+      this.globalTimestamps.shift();
     }
-
-    this.globalReqCount++;
-    this.activeIps.add(ip);
 
     let data = this.ipCache.get(ip);
     if (!data) {
       data = {
-        reqCount: 0,
-        lastReqTime: now,
+        reqTimestamps: [],
         intervals: [],
         endpoints: new Set<string>(),
         errorCount: 0,
+        lastReqTime: now,
       };
       this.ipCache.set(ip, data);
     }
 
-    data.reqCount++;
+    data.reqTimestamps.push(now);
+    while (data.reqTimestamps.length > 0 && data.reqTimestamps[0] < windowStart) {
+      data.reqTimestamps.shift();
+    }
+
     data.endpoints.add(path);
 
-    if (data.reqCount > 1) {
+    if (data.lastReqTime && data.reqTimestamps.length > 1) {
       const interval = now - data.lastReqTime;
       data.intervals.push(interval);
-      if (data.intervals.length > 20) data.intervals.shift(); 
+      if (data.intervals.length > 20) data.intervals.shift();
     }
     data.lastReqTime = now;
 
+    const reqPerMinute = data.reqTimestamps.length;
+
     const avgReqIntervalMs = data.intervals.length > 0
       ? data.intervals.reduce((a, b) => a + b, 0) / data.intervals.length
-      : 2000; 
-    
-    const errorRate = data.reqCount > 0 ? (data.errorCount / data.reqCount) : 0;
+      : 2000;
+
+    const errorRate = data.reqTimestamps.length > 0
+      ? data.errorCount / data.reqTimestamps.length
+      : 0;
+
+    const uniqueIpsInWindow = this.countActiveIps(windowStart);
 
     return {
-      reqPerMinute: data.reqCount,
+      reqPerMinute,
       avgReqIntervalMs,
       endpointsCount: data.endpoints.size,
       errorRate,
-      
-      window_total_req: this.globalReqCount,
-      unique_ips_in_window: this.activeIps.size
+      window_total_req: this.globalTimestamps.length,  
+      unique_ips_in_window: uniqueIpsInWindow,
     };
+  }
+
+  private countActiveIps(windowStart: number): number {
+    let count = 0;
+    for (const [, data] of this.ipCache) {
+      if (data.reqTimestamps.length > 0 && data.reqTimestamps[data.reqTimestamps.length - 1] >= windowStart) {
+        count++;
+      }
+    }
+    return count;
   }
 
   incrementErrorRate(ip: string) {
