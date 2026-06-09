@@ -1,8 +1,8 @@
-# SENTINEL.AI — Web Application Firewall com Detecção de Ataques por IA
+# BotShield AI  — Web Application Firewall com Detecção de Ataques por IA
 
 ## 📋 Sobre o Projeto
 
-**SENTINEL.AI** é um Web Application Firewall (WAF) inteligente que utiliza Machine Learning para detectar e bloquear ataques em tempo real. O sistema analisa padrões de tráfego HTTP e identifica comportamentos suspeitos (força bruta, scrapers, DDoS, etc.) através de um modelo de IA treinado com scikit-learn.
+**BotShield AI ** é um Web Application Firewall (WAF) inteligente que utiliza Machine Learning para detectar e bloquear ataques em tempo real. O sistema analisa padrões de tráfego HTTP e identifica comportamentos suspeitos (força bruta, scrapers, DDoS, etc.) através de um modelo de IA treinado com scikit-learn.
 
 ### Objetivos Principais
 
