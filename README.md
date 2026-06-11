@@ -1,63 +1,124 @@
 # BotShield AI  — Web Application Firewall com Detecção de Ataques por IA
 
-## 📋 Sobre o Projeto
+##  Sobre o Projeto
 
-**BotShield AI ** é um Web Application Firewall (WAF) inteligente que utiliza Machine Learning para detectar e bloquear ataques em tempo real. O sistema analisa padrões de tráfego HTTP e identifica comportamentos suspeitos (força bruta, scrapers, DDoS, etc.) através de um modelo de IA treinado com scikit-learn.
+**BotShield AI** é um Web Application Firewall (WAF) inteligente que utiliza Machine Learning para detectar e bloquear ataques em tempo real. O sistema analisa padrões de tráfego HTTP e identifica comportamentos suspeitos (força bruta, scrapers, DDoS, etc.) através de um modelo de IA treinado com scikit-learn.
 
 ### Objetivos Principais
 
-✅ **Detecção em Tempo Real** — Analisa cada requisição e toma decisões instantâneas (ALLOW/CAPTCHA/BLOCK)  
-✅ **Múltiplos Perfis de Ataque** — Simula 5 tipos diferentes de ataques para teste  
-✅ **Dashboard Ao Vivo** — Console interativo para monitorar tráfego e decisões da IA  
-✅ **Arquitetura Modular** — Backend (NestJS) + ML Server (FastAPI) + Frontend (React)  
-✅ **Métricas por Perfil** — Rastreia estatísticas de segurança para cada tipo de ataque  
+ **Detecção em Tempo Real** — Analisa cada requisição e toma decisões instantâneas (ALLOW/CAPTCHA/BLOCK)  
+ **Múltiplos Perfis de Ataque** — Simula 5 tipos diferentes de ataques para teste  
+ **Dashboard Ao Vivo** — Console interativo para monitorar tráfego e decisões da IA  
+ **Arquitetura Modular** — Backend (NestJS) + ML Server (FastAPI) + Frontend (React)  
+ **Métricas por Perfil** — Rastreia estatísticas de segurança para cada tipo de ataque  
+
+## Arquitetura
+
+O BotShield AI é composto por três camadas principais:
+
+### 1. Dashboard de Monitoramento (React)
+
+Responsável pela interface visual utilizada para acompanhar o tráfego, visualizar estatísticas e simular diferentes cenários de ataque.
+
+**Tecnologias:**
+
+* React 19
+* TanStack Start
+* Tailwind CSS
+
+**Principais funcionalidades:**
+
+* Simulação de tráfego legítimo e malicioso
+* Visualização de logs em tempo real
+* Exibição de métricas de ALLOW, CAPTCHA e BLOCK
+* Monitoramento dos perfis de ataque
 
 ---
 
-## 🏗️ Arquitetura
+### 2. API Backend (NestJS)
 
+Atua como a camada principal da aplicação e recebe todas as requisições HTTP antes que elas alcancem os endpoints.
+
+**Tecnologias:**
+
+* NestJS
+* TypeScript
+
+**Responsabilidades:**
+
+* Aplicar o Attack Middleware em todas as rotas
+* Coletar métricas das requisições
+* Extrair features utilizadas pelo modelo de IA
+* Consultar o servidor FastAPI para classificação do tráfego
+* Definir a ação final da requisição
+
+**Possíveis decisões:**
+
+* ALLOW (HTTP 200)
+* CAPTCHA (HTTP 401)
+* BLOCK (HTTP 403)
+
+**Principais endpoints:**
+
+* GET /api/produtos
+* GET /api/jogos
+* GET /api/softwares
+* GET /api/promocoes
+* GET /api/lancamentos
+* POST /api/login
+* GET /api/admin/live-stats
+
+### 3. Servidor de Inteligência Artificial (FastAPI)
+
+Responsável pela análise comportamental das requisições recebidas do backend.
+
+**Tecnologias:**
+
+* FastAPI
+* Scikit-Learn
+* Random Forest
+
+**Responsabilidades:**
+
+* Receber as features extraídas pelo NestJS
+* Executar a inferência do modelo treinado
+* Calcular o score de risco
+* Retornar a ação recomendada
+
+**Entradas do modelo:**
+
+* Taxa de requisições
+* Intervalo entre requisições
+* Quantidade de endpoints acessados
+* Taxa de erros
+* Informações de User-Agent
+* Cabeçalhos HTTP
+* Características do IP
+* Outras métricas comportamentais
+
+**Saída do modelo:**
+
+```json
+{
+  "status": "attack",
+  "score": 0.92,
+  "action": "block"
+}
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                    SENTINEL.AI Dashboard                     │
-│              (React 19 + TanStack Start + Tailwind)          │
-│                   monitoring-dashboard/                      │
-└────────────────┬────────────────────────────────────────────┘
-                 │ HTTP Requests (com IP spoofing)
-                 ↓
-┌─────────────────────────────────────────────────────────────┐
-│                   NestJS API (Port 3050)                     │
-│                     api-ecommerce/                           │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │         AttackMiddleware (Todos os endpoints)         │  │
-│  │  • Extrai features do IP (taxa, endpoints, erros)     │  │
-│  │  • Envia para FastAPI para predição                   │  │
-│  │  • Decide: ALLOW (200) / CAPTCHA (401) / BLOCK (403) │  │
-│  │  • Retorna header X-WAF-Decision                      │  │
-│  └───────────────────────────────────────────────────────┘  │
-│                                                              │
-│  Routes:                                                     │
-│  GET  /api/produtos, /api/jogos, /api/softwares, etc       │
-│  POST /api/login                                            │
-│  GET  /api/admin/live-stats (estatísticas por perfil)      │
-└────────────────┬────────────────────────────────────────────┘
-                 │
-                 ↓
-┌─────────────────────────────────────────────────────────────┐
-│          FastAPI ML Server (Port 8000)                       │
-│                     fastapi/                                │
-│  ┌───────────────────────────────────────────────────────┐  │
-│  │    RandomForest Classifier (botnet_detector_model)    │  │
-│  │  Input: 11 features (req/min, endpoints, headers, etc)│  │
-│  │  Output: {"status", "score", "action"}                │  │
-│  │  Decision: score ≤ 0.60 (ok) | 0.60-0.80 (captcha)   │  │
-│  │            score > 0.80 (block)                       │  │
-│  └───────────────────────────────────────────────────────┘  │
-└─────────────────────────────────────────────────────────────┘
-```
 
----
+### Fluxo de Processamento
 
-## 🚀 Como Rodar Localmente
+1. O Dashboard gera ou monitora requisições HTTP.
+2. O NestJS intercepta todas as requisições através do Attack Middleware.
+3. As características do tráfego são extraídas.
+4. Essas informações são enviadas para o FastAPI.
+5. O modelo Random Forest calcula o nível de risco.
+6. O FastAPI retorna a classificação.
+7. O NestJS decide entre ALLOW, CAPTCHA ou BLOCK.
+8. A resposta é enviada ao cliente e registrada nos dashboards e logs.
+
+
+##  Como Rodar Localmente
 
 ### Pré-requisitos
 
@@ -80,8 +141,6 @@ python run.py
 ```
 
 O servidor ficará disponível em `http://localhost:8000`. Acesse `/docs` para ver a API interativa.
-
----
 
 ### 2️⃣ NestJS Backend (API de Ecommerce)
 
@@ -111,8 +170,6 @@ O backend ficará disponível em `http://localhost:3050`. A middleware de segura
 - `POST /api/login` — Login (retorna 401)
 - `GET  /api/admin/live-stats` — Estatísticas de segurança por perfil
 
----
-
 ### 3️⃣ React Frontend (Dashboard de Monitoramento)
 
 ```bash
@@ -129,9 +186,7 @@ npm run dev
 
 O dashboard ficará disponível em `http://localhost:3000`.
 
----
-
-## 📊 Como Usar o Dashboard
+##  Como Usar o Dashboard
 
 ### Seleção de Perfil
 
@@ -165,9 +220,7 @@ O dropdown "**Attack Profile**" oferece 5 perfis de ataque:
 | **Entropy** | Score de suspeita (0-7) — quanto maior, mais suspeito |
 | **Status** | Decisão da IA (ALLOW / CAPTCHA / BLOCK) |
 
----
-
-## 🔄 Fluxo de Requisição Completo
+##  Fluxo de Requisição Completo
 
 ### Exemplo: Brute Force Bot
 
@@ -192,9 +245,7 @@ O dropdown "**Attack Profile**" oferece 5 perfis de ataque:
    └─ Adiciona linha na tabela de logs
 ```
 
----
-
-## 🛠️ Configuração Avançada
+## ️ Configuração Avançada
 
 ### Variáveis de Ambiente
 
@@ -224,9 +275,7 @@ Edite `monitoring-dashboard/src/lib/waf-profiles.ts` para:
 - Adicionar novos endpoints
 - Modificar User-Agents
 
----
-
-## 📈 Métricas e Estatísticas
+##  Métricas e Estatísticas
 
 ### Endpoint `/api/admin/live-stats` (GET)
 
@@ -243,9 +292,7 @@ Retorna estatísticas em tempo real por perfil:
 }
 ```
 
----
-
-## 🧪 Testes Manuais (Alternativa ao Dashboard)
+##  Testes Manuais (Alternativa ao Dashboard)
 
 Use o script Python para testes sem o frontend:
 
@@ -260,9 +307,7 @@ python simulador_trafego.py
 # 4. Simular DDoS
 ```
 
----
-
-## 📋 Estrutura de Diretórios
+##  Estrutura de Diretórios
 
 ```
 web-attack-detection-ai/
@@ -306,9 +351,7 @@ web-attack-detection-ai/
 └── README.md                   # Este arquivo
 ```
 
----
-
-## 🔐 Segurança & Detecção
+##  Segurança & Detecção
 
 ### Features Extraídas pela IA
 
@@ -329,19 +372,17 @@ A middleware envia 11 features para o modelo:
 ### Decisões da IA
 
 ```
-Score ≤ 0.60  → ALLOW  (✅ acesso permitido, HTTP 200)
-0.60 < Score ≤ 0.80  → CAPTCHA (⚠️ verificação necessária, HTTP 401)
-Score > 0.80  → BLOCK  (🔒 acesso bloqueado, HTTP 403)
+Score ≤ 0.60  → ALLOW  ( acesso permitido, HTTP 200)
+0.60 < Score ≤ 0.80  → CAPTCHA (️ verificação necessária, HTTP 401)
+Score > 0.80  → BLOCK  ( acesso bloqueado, HTTP 403)
 ```
 
----
-
-## 🐛 Troubleshooting
+##  Troubleshooting
 
 ### Backend (NestJS) não conecta ao FastAPI
 
 ```
-❌ Error: "IA indisponível. Fail-Open aplicado."
+ Error: "IA indisponível. Fail-Open aplicado."
 ```
 
 **Solução:**
@@ -352,7 +393,7 @@ Score > 0.80  → BLOCK  (🔒 acesso bloqueado, HTTP 403)
 ### Frontend não vê os logs
 
 ```
-❌ "connection error — backend offline?"
+ "connection error — backend offline?"
 ```
 
 **Solução:**
@@ -365,21 +406,13 @@ Score > 0.80  → BLOCK  (🔒 acesso bloqueado, HTTP 403)
 **Causa:** Múltiplas requisições em série esperando respostas  
 **Solução:** Dashboard agora faz requisições em paralelo para ataques. Upgrade para a versão mais recente.
 
----
-
-## 📞 Contato & Suporte
+##  Contato & Suporte
 
 Para dúvidas ou issues, verifique:
 - Logs do backend: `security_audit.log`
 - Console do navegador (F12) para erros do frontend
 - Logs do FastAPI para predições
 
----
-
-## 📄 Licença
+##  Licença
 
 Projeto educacional para demonstração de detecção de ataques com IA.
-
----
-
-**Desenvolvido com ❤️ para security research e testing.**
